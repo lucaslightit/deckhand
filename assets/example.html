@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Example deck · Project kickoff</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Ubuntu:wght@400;500;700&display=swap');
+  :root{
+    --bg:#0a0e1a;
+    --bg2:#111726;
+    --panel:#151c2e;
+    --panel2:#1c2438;
+    --ink:#e8edf7;
+    --muted:#8b97b3;
+    --line:#26304a;
+    --accent:#5b8cff;      /* electric blue */
+    --accent2:#23d3a0;     /* green */
+    --accent3:#b07cff;     /* violet */
+    --warn:#ffcc66;
+    --danger:#ff7a85;
+    --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- deck mechanics ---------- */
+  .deck{height:100vh;width:100vw;position:relative}
+  .slide{
+    position:absolute;inset:0;
+    display:none;
+    flex-direction:column;
+    padding:4.2vh 5vw;
+    opacity:0;
+    animation:fade .45s ease forwards;
+    overflow:hidden;
+  }
+  .slide.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  /* progress + chrome */
+  .chrome{
+    position:fixed;bottom:0;left:0;right:0;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 22px;font-size:12px;color:var(--muted);
+    z-index:50;font-family:var(--mono);
+    border-top:1px solid var(--line);
+    background:linear-gradient(180deg,transparent,rgba(0,0,0,.35));
+  }
+  .bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:60;transition:width .35s ease}
+  .brandmini{display:flex;align-items:center;gap:8px;color:var(--muted)}
+  .brandmini b{color:var(--ink);font-weight:600}
+  .dotrow{display:flex;gap:6px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--line)}
+  .dot.on{background:var(--accent)}
+
+  /* ---------- typography ---------- */
+  .kicker{
+    font-family:var(--mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent2);margin-bottom:14px;display:flex;align-items:center;gap:10px;
+  }
+  .kicker::before{content:"";width:26px;height:2px;background:var(--accent2);display:inline-block}
+  h1{font-size:clamp(34px,5vw,62px);line-height:1.04;font-weight:800;letter-spacing:-.02em}
+  h2{font-size:clamp(26px,3.4vw,40px);line-height:1.1;font-weight:750;letter-spacing:-.015em;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:clamp(15px,1.5vw,19px);margin-top:14px;max-width:60ch;line-height:1.5}
+  p{line-height:1.55}
+  .accent{color:var(--accent)}
+  .grn{color:var(--accent2)}
+  .vio{color:var(--accent3)}
+
+  /* ---------- layout helpers ---------- */
+  .grow{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+  .cols{display:grid;gap:22px}
+  .c2{grid-template-columns:1fr 1fr}
+  .c3{grid-template-columns:repeat(3,1fr)}
+  .c4{grid-template-columns:repeat(4,1fr)}
+  .card{
+    background:linear-gradient(160deg,var(--panel),var(--bg2));
+    border:1px solid var(--line);border-radius:16px;padding:20px 22px;
+    position:relative;overflow:hidden;
+  }
+  .card h3{font-size:17px;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+  .card p,.card li{font-size:14px;color:var(--muted);line-height:1.5}
+  .card .ic{font-size:20px}
+  .tag{
+    display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);
+    background:rgba(255,255,255,.02);
+  }
+  .tag.b{color:var(--accent);border-color:rgba(91,140,255,.4)}
+  .tag.g{color:var(--accent2);border-color:rgba(35,211,160,.4)}
+  .tag.v{color:var(--accent3);border-color:rgba(176,124,255,.4)}
+  ul{list-style:none}
+  ul.bul li{position:relative;padding-left:20px;margin:8px 0;font-size:15px;color:var(--ink)}
+  ul.bul li::before{content:"";position:absolute;left:2px;top:9px;width:7px;height:7px;border-radius:2px;background:var(--accent);transform:rotate(45deg)}
+  ul.bul.g li::before{background:var(--accent2)}
+  ul.bul li b{font-weight:650}
+  ul.bul li span{color:var(--muted)}
+
+  code,.mono{font-family:var(--mono)}
+  .chip{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:3px 8px;color:var(--accent)}
+
+  /* flow diagram */
+  .flow{display:flex;flex-direction:column;gap:10px;font-family:var(--mono);font-size:13px}
+  .frow{display:flex;align-items:stretch;gap:10px}
+  .node{
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    padding:11px 14px;color:var(--ink);flex:1;display:flex;flex-direction:column;gap:3px;justify-content:center;
+  }
+  .node small{color:var(--muted);font-size:11px;letter-spacing:.02em}
+  .node.acc{border-color:rgba(91,140,255,.5);box-shadow:inset 0 0 0 1px rgba(91,140,255,.12)}
+  .node.grn{border-color:rgba(35,211,160,.5);box-shadow:inset 0 0 0 1px rgba(35,211,160,.12)}
+  .node.vio{border-color:rgba(176,124,255,.5)}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:18px;width:24px}
+  .arrowdn{text-align:center;color:var(--muted);font-size:15px;line-height:.6}
+
+  table.dt{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.dt th,table.dt td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  table.dt th{color:var(--accent2);font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+  table.dt td{color:var(--muted)}
+  table.dt td b{color:var(--ink);font-weight:600}
+  table.dt tr:hover td{background:rgba(91,140,255,.04)}
+  table.dt code{color:var(--accent);font-size:12.5px}
+
+  .big{font-size:clamp(40px,6vw,84px);font-weight:850;line-height:1;letter-spacing:-.03em}
+  .statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:8px}
+  .stat .big{background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat small{color:var(--muted);font-size:13px;display:block;margin-top:6px;font-family:var(--mono);letter-spacing:.04em}
+
+  .layerstack{display:flex;flex-direction:column;gap:14px}
+  .layer{
+    display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:center;
+    background:linear-gradient(110deg,var(--panel),var(--bg2));
+    border:1px solid var(--line);border-radius:14px;padding:16px 20px;
+  }
+  .layer .lt{font-weight:750;font-size:18px;display:flex;flex-direction:column;gap:4px}
+  .layer .lt small{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;letter-spacing:.05em}
+  .layer .ld{color:var(--muted);font-size:14px;line-height:1.5}
+  .layer.f{border-left:3px solid var(--accent3)}
+  .layer.l{border-left:3px solid var(--accent)}
+  .layer.p{border-left:3px solid var(--accent2)}
+
+  .pill-track{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;z-index:-1}
+  .g1{width:480px;height:480px;background:radial-gradient(circle,rgba(91,140,255,.5),transparent 70%);top:-160px;right:-120px}
+  .g2{width:420px;height:420px;background:radial-gradient(circle,rgba(35,211,160,.35),transparent 70%);bottom:-160px;left:-120px}
+
+  .legend{display:flex;gap:18px;margin-top:16px;font-size:12.5px;color:var(--muted);font-family:var(--mono)}
+  .legend span{display:flex;align-items:center;gap:7px}
+  .sw{width:11px;height:11px;border-radius:3px}
+
+  .note{font-size:12.5px;color:var(--muted);font-family:var(--mono);margin-top:14px;border-left:2px solid var(--line);padding-left:12px}
+  .hl{background:rgba(35,211,160,.12);color:var(--accent2);padding:1px 6px;border-radius:5px;font-family:var(--mono);font-size:.9em}
+
+  .hint{position:fixed;bottom:46px;right:22px;font-size:11px;color:var(--muted);font-family:var(--mono);opacity:.6;z-index:50}
+  .titlemark{font-family:var(--mono);font-size:14px;color:var(--accent2);letter-spacing:.2em}
+
+  /* ============ component library · catalog in references/components.md ============ */
+  :root{
+    --r1:var(--accent2);
+    --r2:color-mix(in srgb,var(--accent2) 50%,var(--accent));
+    --r3:var(--accent);
+    --r4:color-mix(in srgb,var(--accent) 50%,var(--accent3));
+    --r5:var(--accent3);
+  }
+  .grow.top{justify-content:flex-start;padding-top:4vh}
+  .logo{display:block;align-self:flex-start;height:44px;width:auto;margin-bottom:28px}
+
+  /* numbered rows */
+  .nrows{display:flex;flex-direction:column;gap:12px}
+  .nrow{display:grid;grid-template-columns:68px 78px 250px 1fr;min-height:66px;border-radius:12px;overflow:hidden;background:var(--panel)}
+  .nrow.ow{grid-template-columns:62px 70px 250px 1fr 170px;min-height:58px}
+  .nrow .ic{display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--c)}
+  .nrow .num{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;color:var(--ink);background:var(--bg2);box-shadow:inset 10px 0 14px -10px rgba(0,0,0,.6),inset -10px 0 14px -10px rgba(0,0,0,.6)}
+  .nrow .tt{display:flex;align-items:center;padding:0 22px;font-weight:700;font-size:17px;background:color-mix(in srgb,var(--c) 24%,var(--panel))}
+  .nrow .tx{display:flex;align-items:center;padding:10px 22px;color:var(--muted);font-size:14.5px;line-height:1.45;background:color-mix(in srgb,var(--c) 9%,var(--panel))}
+  .nrow .own{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 16px;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:color-mix(in srgb,var(--c) 9%,var(--panel));border-left:1px dashed var(--line)}
+  .nrow .own b{color:var(--c);font-weight:600}
+
+  /* ribbon banners */
+  .banners{display:grid;gap:24px;grid-template-columns:repeat(var(--n,3),1fr);align-items:stretch;padding-left:12px}
+  .banner{position:relative}
+  .banner .body{height:100%;padding:92px 24px 64px;text-align:center;border-top:3px solid var(--c);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--c) 26%,var(--panel)),color-mix(in srgb,var(--c) 8%,var(--bg2)));
+    clip-path:polygon(0 0,100% 0,100% calc(100% - 36px),50% 100%,0 calc(100% - 36px))}
+  .banner .tab{position:absolute;top:22px;left:-12px;width:58%;height:48px;z-index:2;display:flex;align-items:center;padding-left:24px;
+    background:var(--c);color:var(--bg);font-weight:800;font-size:22px;
+    clip-path:polygon(0 0,calc(100% - 22px) 0,100% 50%,calc(100% - 22px) 100%,0 100%)}
+  .banner .tab small{font:600 10.5px var(--mono);letter-spacing:.1em;margin-left:10px;opacity:.75}
+  .banner .fold{position:absolute;top:70px;left:-12px;width:12px;height:10px;background:color-mix(in srgb,var(--c) 40%,#000);clip-path:polygon(0 0,100% 0,100% 100%)}
+  .banner .bi{font-size:28px;margin-bottom:8px}
+  .banner h4{font-size:19px;font-weight:750;margin-bottom:10px;color:var(--ink)}
+  .banner p{color:var(--muted);font-size:14px;line-height:1.5}
+
+  /* stacked summary cards */
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .stack.c2{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+  .scard{display:flex;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,var(--panel)),var(--panel) 60%);border-radius:4px 12px 12px 4px;overflow:hidden}
+  .scard::before{content:"";flex:0 0 8px;background:var(--c)}
+  .scard .in{padding:15px 22px}
+  .scard b{display:block;font-size:17px;font-weight:700;margin-bottom:4px;color:var(--ink)}
+  .scard span{color:var(--muted);font-size:14px;line-height:1.45}
+
+  /* chevron process */
+  .process{display:flex}
+  .pstep{flex:1;min-height:118px;margin-left:-14px;padding:20px 30px 20px 46px;display:flex;flex-direction:column;justify-content:center;gap:4px;
+    background:color-mix(in srgb,var(--c) 16%,var(--panel));
+    clip-path:polygon(0 0,calc(100% - 28px) 0,100% 50%,calc(100% - 28px) 100%,0 100%,28px 50%)}
+  .pstep:first-child{margin-left:0;padding-left:26px;clip-path:polygon(0 0,calc(100% - 28px) 0,100% 50%,calc(100% - 28px) 100%,0 100%)}
+  .pstep .k{font:600 11px var(--mono);letter-spacing:.1em;color:var(--c)}
+  .pstep b{font-size:16px;line-height:1.25}
+  .pstep small{color:var(--muted);font:12px var(--mono)}
+  .pstep.on{background:var(--c);color:var(--bg)}
+  .pstep.on .k,.pstep.on small{color:color-mix(in srgb,var(--bg) 75%,transparent)}
+
+  /* stepper */
+  .steps{display:grid;gap:22px 18px;margin-top:26px;grid-template-columns:repeat(var(--n,4),1fr)}
+  .step{position:relative;background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:14px;
+    padding:22px 18px 18px;min-height:96px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+  .step b{font-size:15.5px;line-height:1.3;font-weight:650}
+  .step small{color:var(--muted);font-size:11.5px;font-family:var(--mono);letter-spacing:.03em}
+  .step .n{position:absolute;top:-13px;left:16px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.05em;
+    background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted)}
+  .step.acc,.step.acc .n{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+  .step.acc .n{color:var(--accent)}
+  .step.grn,.step.grn .n{border-color:color-mix(in srgb,var(--accent2) 55%,transparent)}
+  .step.grn .n{color:var(--accent2)}
+  .step.vio,.step.vio .n{border-color:color-mix(in srgb,var(--accent3) 65%,transparent)}
+  .step.vio .n{color:var(--accent3)}
+  .step.dim{opacity:.62}
+
+  /* bridge diagram (inline SVG) */
+  .bridge svg{width:100%;height:auto;max-height:56vh;display:block}
+  .bridge text{font-family:var(--sans)}
+  .bridge .br-title{font-weight:800;fill:var(--ink)}
+  .bridge .br-sub{font-family:var(--mono);fill:var(--muted)}
+  .bridge .br-sub.to{fill:var(--accent)}
+  .bridge .br-pillar{fill:var(--panel2);stroke:var(--line);stroke-width:2}
+  .bridge .br-pillar.to{fill:color-mix(in srgb,var(--accent) 14%,var(--panel));stroke:var(--accent)}
+  .bridge .br-arch{fill:none;stroke:var(--accent2);stroke-width:5}
+  .bridge .br-hangers{stroke:var(--accent2);stroke-width:2;opacity:.55}
+  .bridge .br-deck,.bridge .br-head{fill:var(--accent2)}
+  .bridge .br-label{font-family:var(--mono);fill:var(--accent2);letter-spacing:3px}
+  .bridge .br-flow{stroke:var(--accent2);stroke-width:2}
+  .bridge .br-pill{fill:color-mix(in srgb,var(--accent2) 12%,var(--panel));stroke:var(--accent2);stroke-width:1.5}
+  .bridge .br-pill-t{font-weight:600;fill:var(--ink)}
+  .bridge .br-water{stroke:var(--line);stroke-width:2;stroke-dasharray:12 12}
+  .bridge .br-caption{font-family:var(--mono);fill:var(--muted);letter-spacing:1px}
+  .bridge .br-next{stroke:var(--line);stroke-width:3;stroke-dasharray:6 8}
+  .bridge .br-next-dot{fill:none;stroke:var(--muted);stroke-width:1.5}
+
+  /* timeline */
+  .timeline{position:relative;display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:18px;padding-top:34px}
+  .timeline::before{content:"";position:absolute;left:0;right:0;top:42px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent2),var(--accent),var(--accent3))}
+  .tl{position:relative;padding:34px 8px 0 0}
+  .tl::before{content:"";position:absolute;top:0;left:0;width:19px;height:19px;border-radius:50%;background:var(--bg);border:3px solid var(--c,var(--accent))}
+  .tl.done::before{background:var(--c,var(--accent))}
+  .tl.now::before{box-shadow:0 0 0 7px color-mix(in srgb,var(--c,var(--accent)) 28%,transparent)}
+  .tl .when{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--c,var(--accent))}
+  .tl b{display:block;font-size:16px;margin:6px 0 4px}
+  .tl p{font-size:13.5px;color:var(--muted);line-height:1.45}
+
+  /* versus (before / after) */
+  .versus{display:grid;grid-template-columns:1fr auto 1fr;gap:22px;align-items:stretch}
+  .vs-side{border-radius:16px;padding:26px 28px;background:var(--panel);border:1px solid var(--line)}
+  .vs-side.after{background:linear-gradient(160deg,color-mix(in srgb,var(--accent2) 12%,var(--panel)),var(--panel));border-color:color-mix(in srgb,var(--accent2) 45%,transparent)}
+  .vs-side .lbl{font:600 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .vs-side.after .lbl{color:var(--accent2)}
+  .vs-side h4{font-size:21px;font-weight:750;margin-bottom:8px}
+  .vs-side li{position:relative;padding-left:26px;margin:11px 0;font-size:15px;line-height:1.4;color:var(--muted)}
+  .vs-side.after li{color:var(--ink)}
+  .vs-side li::before{content:"✕";position:absolute;left:0;font-weight:700;color:var(--danger)}
+  .vs-side.after li::before{content:"✓";color:var(--accent2)}
+  .vs-badge{align-self:center;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 14px var(--mono);background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+
+  /* quote */
+  .quote{position:relative;max-width:1150px;padding:14px 0 0 72px}
+  .quote::before{content:"\201C";position:absolute;left:0;top:-34px;font:160px/1 Georgia,serif;color:var(--accent);opacity:.55}
+  .quote blockquote{font-size:clamp(24px,2.8vw,38px);line-height:1.3;font-weight:650;color:var(--ink)}
+  .quote blockquote em{font-style:normal;color:var(--accent2)}
+  .quote .by{margin-top:24px;font:13px var(--mono);letter-spacing:.06em;color:var(--muted)}
+
+  /* quadrant (2x2 matrix) */
+  .quadrant{display:grid;grid-template-columns:34px 1fr 1fr;grid-template-rows:1fr 1fr 30px;gap:12px;height:54vh}
+  .q-axis{display:flex;align-items:center;justify-content:center;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .q-axis.y{grid-row:1/3;grid-column:1;writing-mode:vertical-rl;transform:rotate(180deg)}
+  .q-axis.x{grid-row:3;grid-column:2/4}
+  .q{display:flex;flex-direction:column;gap:10px;padding:18px 20px;border-radius:14px;overflow:hidden;
+    background:color-mix(in srgb,var(--c,var(--line)) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--c,var(--line)) 40%,transparent)}
+  .q h4{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--c,var(--muted))}
+  .q .q-items{display:flex;flex-wrap:wrap;gap:8px}
+  .q .q-items span{font-size:13.5px;padding:5px 12px;border-radius:999px;background:var(--bg2);border:1px solid var(--line);color:var(--ink)}
+
+  /* meters (progress bars) */
+  .meters{display:flex;flex-direction:column;gap:20px}
+  .meter{display:grid;grid-template-columns:260px 1fr 96px;gap:20px;align-items:center}
+  .meter .ml{font-weight:650;font-size:16px}
+  .meter .ml small{display:block;margin-top:3px;font:12px var(--mono);font-weight:400;color:var(--muted)}
+  .meter .track{height:14px;border-radius:999px;background:var(--panel2);overflow:hidden}
+  .meter .fill{height:100%;width:var(--v);border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--c,var(--accent)) 55%,transparent),var(--c,var(--accent)))}
+  .meter .mv{text-align:right;font:700 18px var(--mono);color:var(--c,var(--accent))}
+
+  /* checklist with status */
+  .checklist{display:flex;flex-direction:column;gap:10px}
+  .chk{display:grid;grid-template-columns:30px 1fr auto;gap:16px;align-items:center;padding:14px 20px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}
+  .chk .box{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;border:2px solid var(--line);color:var(--bg)}
+  .chk.done .box{background:var(--accent2);border-color:var(--accent2)}
+  .chk.done .box::after{content:"✓"}
+  .chk.doing .box{border-color:var(--warn)}
+  .chk.doing .box::after{content:"";width:10px;height:10px;border-radius:3px;background:var(--warn)}
+  .chk.blocked .box{border-color:var(--danger);color:var(--danger)}
+  .chk.blocked .box::after{content:"!"}
+  .chk b{display:block;font-size:16px;font-weight:650}
+  .chk.done b{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 50%,transparent)}
+  .chk span{display:block;margin-top:2px;font-size:13.5px;color:var(--muted)}
+  .chk .st{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .chk.done .st{color:var(--accent2);border-color:color-mix(in srgb,var(--accent2) 45%,transparent)}
+  .chk.doing .st{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+  .chk.blocked .st{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,transparent)}
+
+  /* people */
+  .people{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:18px}
+  .person{display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+  .person .av{flex:0 0 56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;color:var(--bg);background:var(--c,var(--accent))}
+  .person b{display:block;font-size:16px}
+  .person span{display:block;margin-top:3px;font:12px var(--mono);color:var(--muted)}
+  .person em{display:inline-block;margin-top:8px;font:normal 600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--c,var(--accent))}
+
+  /* section divider */
+  .divider{display:flex;align-items:center;gap:48px}
+  .divider .dv-n{font-size:clamp(120px,16vw,220px);font-weight:850;line-height:.8;letter-spacing:-.05em;
+    background:linear-gradient(160deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .divider .dv-t{border-left:2px solid var(--line);padding-left:40px}
+  .divider .dv-t h2{font-size:clamp(34px,4.4vw,56px)}
+  .divider .dv-t p{margin-top:10px;max-width:50ch;font-size:18px;color:var(--muted)}
+  /* icons · Iconify SVGs inlined by scripts/icon.py */
+  .icon{display:inline-block;width:1em;height:1em;flex:none;vertical-align:-.14em}
+  .icon-lg{font-size:44px}
+  .card .ic .icon,.banner .bi .icon,.scard b .icon,.pstep b .icon,.tl b .icon,.chk b .icon{color:var(--c,var(--accent))}
+  .step b .icon,table.dt td b .icon{color:var(--accent)}
+  .scard b .icon,.pstep b .icon,.tl b .icon,.chk b .icon,.step b .icon,table.dt td b .icon,.titlemark .icon{margin-right:6px}
+  .card .ic .icon{font-size:22px}
+  .banner .bi .icon{font-size:34px}
+  .nrow .ic .icon{font-size:28px;color:var(--bg)}
+  .person .av .icon{font-size:26px}
+  .titlemark .icon{font-size:1.15em}
+  .pstep.on b .icon{color:inherit}
+  .nrow .tx .icon,.meter .ml .icon{margin:0 .35em}
+  /* ---------- theme: Light-it ---------- */
+:root{
+  --bg:#1C202E; --bg2:#242a3b; --panel:#272d3f; --panel2:#30374c;
+  --ink:#FCFCFC; --muted:#B7B7B7; --line:#3a4157;
+  --accent:#BAA2FF;   /* light purple */
+  --accent2:#CFE517;  /* lime */
+  --accent3:#6F4BF2;  /* purple */
+  --r2:#9EDB7A;       /* lime→lilac mixes to khaki; pin the ramp midpoints */
+  --r4:#9A7BFF;
+  --sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+h1,h2{font-family:'Ubuntu',var(--sans);font-weight:700}
+.tag.b{border-color:rgba(186,162,255,.4)}
+.tag.g{border-color:rgba(207,229,23,.4)}
+.tag.v{border-color:rgba(111,75,242,.4)}
+.node.acc{border-color:rgba(186,162,255,.5);box-shadow:inset 0 0 0 1px rgba(186,162,255,.12)}
+.node.grn{border-color:rgba(207,229,23,.5);box-shadow:inset 0 0 0 1px rgba(207,229,23,.12)}
+.hl{background:rgba(207,229,23,.12)}
+table.dt tr:hover td{background:rgba(186,162,255,.04)}
+.g1{background:radial-gradient(circle,rgba(186,162,255,.5),transparent 70%)}
+.g2{background:radial-gradient(circle,rgba(207,229,23,.35),transparent 70%)}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<div class="deck" id="deck">
+
+<!-- ============================================================= -->
+<!-- SLIDES GO HERE. See SKILL.md for the component vocabulary.     -->
+<!-- Each slide is: <section class="slide"> ... </section>          -->
+<!-- ============================================================= -->
+
+<!-- 1 TITLE -->
+<section class="slide">
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="grow">
+    <svg class="logo" role="img" aria-label="Light-it" viewBox="0 0 154 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_80_47)">
+<path d="M53.0082 9.77539H48.0093V14.1762H53.0082V9.77539Z" fill="white"/>
+<path d="M120.251 24.0635H108.859V29.0624H120.251V24.0635Z" fill="white"/>
+<path d="M57.1487 35.8186H53.5599C50.501 35.8186 48.0093 33.3299 48.0093 30.2679V17.3506H53.0082V30.2679C53.0082 30.5717 53.2562 30.8196 53.5599 30.8196H57.1487V35.8186Z" fill="white"/>
+<path d="M127.453 9.77539H122.454V14.1762H127.453V9.77539Z" fill="white"/>
+<path d="M46.6673 35.7651H43.0785C40.0165 35.7651 37.5278 33.2764 37.5278 30.2144V9.77539H42.5268V30.2144C42.5268 30.5182 42.7747 30.7661 43.0785 30.7661H46.6673V35.7651Z" fill="white"/>
+<path d="M108.858 22.3527V17.3537H104.718V9.7793H99.7188V30.2711C99.7188 33.3299 102.207 35.8217 105.269 35.8217H108.858V30.8227H105.269C104.966 30.8227 104.718 30.5748 104.718 30.2711V22.3527H108.858Z" fill="white"/>
+<path d="M131.721 35.8186H128.132C125.073 35.8186 122.582 33.3299 122.582 30.2679V17.3506H127.581V30.2679C127.581 30.5717 127.828 30.8196 128.132 30.8196H131.721V35.8186Z" fill="white"/>
+<path d="M142.11 22.3527V17.3537H137.969V9.7793H132.97V30.2711C132.97 33.3299 135.459 35.8217 138.521 35.8217H142.11V30.8227H138.521C138.217 30.8227 137.969 30.5748 137.969 30.2711V22.3527H142.11Z" fill="white"/>
+<path d="M89.3119 16.6773C87.6166 16.6773 86.0391 17.2103 84.7127 18.1215V9.77539H79.7075V35.8147H84.7127V25.6773C84.7344 23.4645 86.535 21.6762 88.7509 21.6762C90.9668 21.6762 92.7922 23.4861 92.7922 25.7176V35.8147H97.7974V25.7176C97.7974 20.7248 94.0009 16.6742 89.315 16.6742L89.3119 16.6773Z" fill="white"/>
+<path d="M71.8855 16.6993V18.4596C70.3855 17.3408 68.5601 16.6807 66.5921 16.6807C61.5125 16.6807 57.3813 21.0567 57.3813 26.4338C57.3813 31.8108 61.5125 36.1869 66.5921 36.1869C68.5632 36.1869 70.3886 35.5268 71.8855 34.408V35.8212C71.8855 38.44 69.7533 40.5722 67.1345 40.5722C65.5198 40.5722 64.0105 39.7416 63.1396 38.3904L59.3462 41.6848C61.1747 44.1084 64.0632 45.5712 67.1376 45.5712C72.5146 45.5712 76.8907 41.1951 76.8907 35.8181V16.6993H71.8917H71.8855ZM67.1345 31.1848C64.5157 31.1848 62.3834 29.0526 62.3834 26.4338C62.3834 23.815 64.5157 21.6827 67.1345 21.6827C69.7533 21.6827 71.8855 23.815 71.8855 26.4338C71.8855 29.0526 69.7533 31.1848 67.1345 31.1848Z" fill="white"/>
+<path d="M17.5445 22.8204V10.1045C17.5445 9.78837 17.1633 9.63032 16.9402 9.85346L7.53418 19.2502V28.8452C7.53418 30.9093 9.44327 32.8184 11.7986 32.8184H17.5445V45.2708C17.5445 45.587 17.9257 45.745 18.1489 45.5219L27.5456 36.1252V27.0477C27.5456 24.7109 25.652 22.8173 23.3121 22.8173H17.5445V22.8204Z" fill="#794DFC"/>
+</g>
+<defs>
+<clipPath id="clip0_80_47">
+<rect width="153.394" height="50.3507" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+    <div class="titlemark"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:package" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73zm1 .27V12"/><path d="M3.29 7L12 12l8.71-5M7.5 4.27l9 5.15"/></g></svg> EXAMPLE DECK · PROJECT KICKOFF</div>
+    <h1 style="margin-top:18px">Moving the platform<br><span class="accent">without stopping it</span></h1>
+    <p class="sub">The legacy-to-new migration starts today. We do not pick the strategy yet: we split the work that lets us pick it well.</p>
+    <div class="pill-track" style="margin-top:34px">
+      <span class="tag v">Research</span>
+      <span class="tag b">Workstreams</span>
+      <span class="tag g">Owners</span>
+    </div>
+  </div>
+</section>
+
+<!-- 1b DIVIDER · context -->
+<section class="slide">
+  <div class="glow g1"></div>
+  <div class="grow">
+    <div class="divider">
+      <div class="dv-n">01</div>
+      <div class="dv-t"><div class="kicker">Part one</div><h2>Where we are</h2><p>What the migration is, what already exists, and what has to move.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 CONTEXT · bridge -->
+<section class="slide">
+  <div class="kicker">Starting point</div>
+  <h2>The migration is <span class="accent">the bridge</span></h2>
+  <div class="grow">
+    <div class="bridge">
+      <svg viewBox="0 0 1300 370" role="img" aria-label="The legacy platform and the new platform joined by a migration bridge carrying integrations and core entities">
+        <defs><marker id="br-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="br-head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+        <line class="br-water" x1="290" y1="352" x2="850" y2="352"/>
+        <text class="br-caption" x="570" y="336" text-anchor="middle" font-size="14">all of the legacy data</text>
+        <rect class="br-pillar" x="40" y="150" width="240" height="210" rx="14"/>
+        <text class="br-title" x="160" y="232" text-anchor="middle" font-size="34">Legacy</text>
+        <text class="br-sub" x="160" y="264" text-anchor="middle" font-size="14">IN PRODUCTION</text>
+        <rect class="br-pillar to" x="860" y="150" width="240" height="210" rx="14"/>
+        <text class="br-title" x="980" y="232" text-anchor="middle" font-size="34">New platform</text>
+        <text class="br-sub to" x="980" y="264" text-anchor="middle" font-size="13">PHASE 1 · FEATURE PARITY</text>
+        <path class="br-arch" d="M280 150 Q570 -10 860 150"/>
+        <g class="br-hangers">
+          <line x1="338" y1="121" x2="338" y2="140"/><line x1="396" y1="99" x2="396" y2="140"/><line x1="454" y1="83" x2="454" y2="140"/>
+          <line x1="512" y1="73" x2="512" y2="140"/><line x1="570" y1="70" x2="570" y2="140"/><line x1="628" y1="73" x2="628" y2="140"/>
+          <line x1="686" y1="83" x2="686" y2="140"/><line x1="744" y1="99" x2="744" y2="140"/><line x1="802" y1="121" x2="802" y2="140"/>
+        </g>
+        <rect class="br-deck" x="266" y="138" width="608" height="16" rx="4"/>
+        <text class="br-label" x="570" y="48" text-anchor="middle" font-size="17">PHASE 2 · MIGRATION</text>
+        <line class="br-flow" x1="292" y1="206" x2="382" y2="206" marker-end="url(#br-ah)"/>
+        <rect class="br-pill" x="390" y="182" width="360" height="48" rx="24"/>
+        <text class="br-pill-t" x="570" y="213" text-anchor="middle" font-size="18">Third-party integrations</text>
+        <line class="br-flow" x1="758" y1="206" x2="848" y2="206" marker-end="url(#br-ah)"/>
+        <line class="br-flow" x1="292" y1="272" x2="382" y2="272" marker-end="url(#br-ah)"/>
+        <rect class="br-pill" x="390" y="248" width="360" height="48" rx="24"/>
+        <text class="br-pill-t" x="570" y="279" text-anchor="middle" font-size="18">Core entities</text>
+        <line class="br-flow" x1="758" y1="272" x2="848" y2="272" marker-end="url(#br-ah)"/>
+        <line class="br-next" x1="1104" y1="255" x2="1196" y2="255"/>
+        <circle class="br-next-dot" cx="1210" cy="255" r="6"/>
+        <text class="br-sub" x="1226" y="251" font-size="12">PHASE 3</text>
+        <text class="br-sub" x="1226" y="268" font-size="12" opacity=".6">TBD</text>
+      </svg>
+    </div>
+    <div class="note">No parity, no bridge: migrating into a less capable product is a downgrade.</div>
+  </div>
+</section>
+
+<!-- 2b VERSUS -->
+<section class="slide">
+  <div class="kicker">Why it is not a copy</div>
+  <h2>Two platforms, <span class="accent">two ways of thinking</span></h2>
+  <div class="grow">
+    <div class="versus">
+      <div class="vs-side"><div class="lbl">Legacy</div><h4>The contract lives in code</h4><ul><li>A new vendor means a deploy</li><li>A credential change means a ticket</li><li>Misread payloads are lost forever</li></ul></div>
+      <div class="vs-badge">VS</div>
+      <div class="vs-side after"><div class="lbl">New platform</div><h4>The contract lives in data</h4><ul><li>Build once, install per tenant</li><li>Operators configure, no deploy</li><li>Raw payloads stored and reprocessable</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 WHERE WE START · stats + stacked cards -->
+<section class="slide">
+  <div class="kicker">Ground zero</div>
+  <h2>We start <span style="color:var(--danger)">from zero</span>, literally</h2>
+  <div class="grow">
+    <div class="statrow">
+      <div class="stat card"><div class="big">40+</div><small>tenants in production</small></div>
+      <div class="stat card"><div class="big">18/25</div><small>integrations not yet rebuilt</small></div>
+      <div class="stat card"><div class="big">0</div><small>lines of migration tooling</small></div>
+    </div>
+    <div class="stack c2" style="margin-top:24px">
+      <div class="scard" style="--c:var(--warn)"><div class="in"><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:link" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></g></svg> A tenant moves when its vendors are rebuilt</b><span>Not before. Integrations are the critical path.</span></div></div>
+      <div class="scard" style="--c:var(--danger)"><div class="in"><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:circle-dashed" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.1 2.182a10 10 0 0 1 3.8 0m0 19.636a10 10 0 0 1-3.8 0m7.509-18.097a10 10 0 0 1 2.69 2.7M2.182 13.9a10 10 0 0 1 0-3.8m18.097 7.509a10 10 0 0 1-2.7 2.69M21.818 10.1a10 10 0 0 1 0 3.8M3.721 6.391a10 10 0 0 1 2.7-2.69m-.03 16.578a10 10 0 0 1-2.69-2.7"/></svg> Legacy stored what it understood</b><span>Whatever was discarded while parsing is gone.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3b METERS -->
+<section class="slide">
+  <div class="kicker">Ground zero</div>
+  <h2>How far <span class="grn">each track</span> is</h2>
+  <div class="grow">
+    <div class="meters">
+      <div class="meter" style="--v:0%;--c:var(--danger)"><div class="ml">Migration tooling<small>nothing built yet</small></div><div class="track"><div class="fill"></div></div><div class="mv">0%</div></div>
+      <div class="meter" style="--v:28%;--c:var(--warn)"><div class="ml">Integrations<small>7 of 25 rebuilt</small></div><div class="track"><div class="fill"></div></div><div class="mv">28%</div></div>
+      <div class="meter" style="--v:70%;--c:var(--accent)"><div class="ml">Feature parity<small>modules in staging</small></div><div class="track"><div class="fill"></div></div><div class="mv">70%</div></div>
+      <div class="meter" style="--v:100%;--c:var(--accent2)"><div class="ml">Environments<small>dev, staging, production</small></div><div class="track"><div class="fill"></div></div><div class="mv">100%</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 SCOPE · numbered rows -->
+<section class="slide">
+  <div class="kicker">Scope</div>
+  <h2>Everything <span class="grn">moves</span></h2>
+  <div class="grow">
+    <div class="nrows">
+      <div class="nrow" style="--c:var(--r1)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:factory" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16h.01M16 16h.01M3 19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5a.5.5 0 0 0-.769-.422l-4.462 2.844A.5.5 0 0 1 15 10.5v-2a.5.5 0 0 0-.769-.422L9.77 10.922A.5.5 0 0 1 9 10.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2zm5-3h.01"/></svg></div><div class="num">01</div><div class="tt">Operations</div><div class="tx">Sites, devices, orders and payments, with their full history.</div></div>
+      <div class="nrow" style="--c:var(--r2)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:id-card" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M13 19a4 4 0 0 0-8 0m11-9h2m-2 4h2"/><circle cx="9" cy="12" r="3"/><rect width="20" height="14" x="2" y="5" rx="2"/></g></svg></div><div class="num">02</div><div class="tt">Identity</div><div class="tx">Users deduplicated by email, memberships, roles and permissions.</div></div>
+      <div class="nrow" style="--c:var(--r3)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:plug" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22v-5m3-9V2m2 6a1 1 0 0 1 1 1v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1zM9 8V2"/></svg></div><div class="num">03</div><div class="tt">Integrations</div><div class="tx">Every active integration becomes an installed plugin with its credentials.</div></div>
+      <div class="nrow" style="--c:var(--r5)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:file-text" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10 9H8m8 4H8m8 4H8"/></g></svg></div><div class="num">04</div><div class="tt">External contracts</div><div class="tx">API tokens and webhooks reissued, audit trail imported with its origin.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 NON-NEGOTIABLES · banners -->
+<section class="slide">
+  <div class="kicker">Rules of the game</div>
+  <h2>What is <span style="color:var(--danger)">not negotiable</span></h2>
+  <div class="grow">
+    <div class="banners" style="--n:5;gap:20px">
+      <div class="banner" style="--c:var(--danger)"><div class="tab">01</div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:calculator" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M8 6h8m0 8v4m0-8h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"/></g></svg></div><h4>Zero data loss</h4><p>Every legacy row has its pair, proven by reconciliation.</p></div></div>
+      <div class="banner" style="--c:var(--warn)"><div class="tab">02</div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:calendar" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M8 2v3m8-3v3"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/></g></svg></div><h4>No surprise downtime</h4><p>Each tenant signs its window in advance.</p></div></div>
+      <div class="banner" style="--c:var(--accent)"><div class="tab">03</div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:undo-2" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></g></svg></div><h4>Rollback per tenant</h4><p>Back to legacy within an SLA if it fails.</p></div></div>
+      <div class="banner" style="--c:var(--r4)"><div class="tab">04</div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:tag" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></g></svg></div><h4>Provenance forever</h4><p><code>migrated_from</code> with original ID and batch.</p></div></div>
+      <div class="banner" style="--c:var(--accent2)"><div class="tab">05</div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:mail" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m22 7l-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect width="20" height="16" x="2" y="4" rx="2"/></g></svg></div><h4>Partners told first</h4><p>Written notice and new credentials before cutover.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5b DIVIDER · plan -->
+<section class="slide">
+  <div class="glow g1"></div>
+  <div class="grow">
+    <div class="divider">
+      <div class="dv-n">02</div>
+      <div class="dv-t"><div class="kicker">Part two</div><h2>The plan</h2><p>How we decide, who does what, and what happens next.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 OPTIONS · table -->
+<section class="slide">
+  <div class="kicker">The big decision</div>
+  <h2>Three strategies, <span class="accent">none chosen</span></h2>
+  <div class="grow">
+    <table class="dt">
+      <tr><th>Strategy</th><th>How it works</th><th>Risk</th><th>Coexistence cost</th></tr>
+      <tr><td><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:zap" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.914 4a1.5 1.5 0 0 0-2.474-1.561l-9 9A1.5 1.5 0 0 0 5.5 14h4.002a.5.5 0 0 1 .471.666L8.086 20a1.5 1.5 0 0 0 2.475 1.56l9-9A1.5 1.5 0 0 0 18.5 10h-3.997a.5.5 0 0 1-.472-.667z"/></svg> Big-bang</b></td><td>One cutover weekend, every tenant at once</td><td style="color:var(--danger)">High, concentrated</td><td style="color:var(--accent2)">Low</td></tr>
+      <tr><td><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:repeat" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m17 2l4 4l-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4l4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></g></svg> Rolling per tenant</b></td><td>One tenant at a time</td><td style="color:var(--warn)">Medium, spread</td><td style="color:var(--danger)">High: both systems live for months</td></tr>
+      <tr><td><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:copy" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></g></svg> Shadow / CDC</b></td><td>New platform receives legacy writes; reads flip first, then writes</td><td style="color:var(--accent2)">Lowest data-loss risk</td><td style="color:var(--danger)">Hardest to build</td></tr>
+    </table>
+    <div class="note">The right one depends on two things we cannot measure yet: the real size of legacy and team bandwidth.</div>
+  </div>
+</section>
+
+<!-- 6b QUADRANT -->
+<section class="slide">
+  <div class="kicker">Risk analysis</div>
+  <h2>Risks we <span style="color:var(--danger)">already see</span></h2>
+  <div class="grow">
+    <div class="quadrant">
+      <div class="q-axis y">Impact →</div>
+      <div class="q" style="--c:var(--warn)"><h4>High impact · unlikely</h4><div class="q-items"><span>Vendor API retired mid-migration</span><span>Compliance blocks prod copies</span></div></div>
+      <div class="q" style="--c:var(--danger)"><h4>High impact · likely</h4><div class="q-items"><span>Undocumented legacy rules</span><span>Data loss on cutover</span></div></div>
+      <div class="q" style="--c:var(--muted)"><h4>Low impact · unlikely</h4><div class="q-items"><span>Tool licensing cost</span></div></div>
+      <div class="q" style="--c:var(--accent)"><h4>Low impact · likely</h4><div class="q-items"><span>Duplicated users</span><span>Timezone drift in history</span></div></div>
+      <div class="q-axis x">Likelihood →</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 PATH · chevron process -->
+<section class="slide">
+  <div class="kicker">The path</div>
+  <h2>From research to <span class="grn">cutover</span></h2>
+  <div class="grow">
+    <div class="process">
+      <div class="pstep on" style="--c:var(--accent)"><span class="k">01 · NOW</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:search" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m21 21l-4.34-4.34"/><circle cx="11" cy="11" r="8"/></g></svg> Research</b><small>parallel workstreams</small></div>
+      <div class="pstep" style="--c:var(--r4)"><span class="k">02 · GATE</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:scale" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 3v18m7-13l3 8a5 5 0 0 1-6 0zV7"/><path d="M3 7h1a17 17 0 0 0 8-2a17 17 0 0 0 8 2h1M5 8l3 8a5 5 0 0 1-6 0zV7m2 14h10"/></g></svg> Tool and technique</b><small>decided with data</small></div>
+      <div class="pstep" style="--c:var(--r3)"><span class="k">03</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:wrench" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg> Build the migrator</b><small>ETL + reconciliation</small></div>
+      <div class="pstep" style="--c:var(--r2)"><span class="k">04</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:flask-conical" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2M6.453 15h11.094M8.5 2h7"/></svg> Dry-run</b><small>end to end</small></div>
+      <div class="pstep" style="--c:var(--r1)"><span class="k">05</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:truck" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2m10 0H9m10 0h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></g></svg> Migration</b><small>pilot tenant first</small></div>
+    </div>
+    <div class="note" style="margin-top:22px">Step 02 is a gate: no tool and technique, no migrator code.</div>
+  </div>
+</section>
+
+<!-- 7b TIMELINE -->
+<section class="slide">
+  <div class="kicker">Roadmap</div>
+  <h2>A tentative <span class="accent">calendar</span></h2>
+  <div class="grow">
+    <div class="timeline" style="--n:5">
+      <div class="tl done" style="--c:var(--r1)"><span class="when">Today</span><b>Kickoff</b><p>Workstreams and owners.</p></div>
+      <div class="tl now" style="--c:var(--r2)"><span class="when">Month 1</span><b>Research</b><p>Findings written as specs.</p></div>
+      <div class="tl" style="--c:var(--r3)"><span class="when">Month 2</span><b>Decision</b><p>Tool and technique chosen.</p></div>
+      <div class="tl" style="--c:var(--r4)"><span class="when">Months 3–5</span><b>Migrator</b><p>Built and dry-run end to end.</p></div>
+      <div class="tl" style="--c:var(--r5)"><span class="when">Month 6</span><b>First cutover</b><p>Pilot tenant.</p></div>
+    </div>
+    <div class="note" style="margin-top:28px">Dates are placeholders until the research closes.</div>
+  </div>
+</section>
+
+<!-- 8 WORKSTREAMS · owner rows -->
+<section class="slide">
+  <div class="kicker">The split</div>
+  <h2>Five workstreams, <span class="accent">one owner each</span></h2>
+  <div class="grow">
+    <div class="nrows" style="gap:10px">
+      <div class="nrow ow" style="--c:var(--r1)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:database" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></g></svg></div><div class="num">01</div><div class="tt">Legacy inventory</div><div class="tx">Tables, volume per table, active tenants, orphaned data.</div><div class="own"><span>owner <b>[TBD]</b></span><span>date <b>[TBD]</b></span></div></div>
+      <div class="nrow ow" style="--c:var(--r2)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:chart-column" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v16a2 2 0 0 0 2 2h16m-3-4V9m-5 8V5M8 17v-3"/></svg></div><div class="num">02</div><div class="tt">Parity matrix</div><div class="tx">Legacy features per tenant: in or out of scope.</div><div class="own"><span>owner <b>[TBD]</b></span><span>date <b>[TBD]</b></span></div></div>
+      <div class="nrow ow" style="--c:var(--r3)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:shuffle" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m18 14l4 4l-4 4m0-20l4 4l-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22M2 6h1.972a4 4 0 0 1 3.6 2.2M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></g></svg></div><div class="num">03</div><div class="tt">Data mapping</div><div class="tx">Legacy → new rules per entity: roles, users, provenance.</div><div class="own"><span>owner <b>[TBD]</b></span><span>date <b>[TBD]</b></span></div></div>
+      <div class="nrow ow" style="--c:var(--r4)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:blocks" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"/><rect width="8" height="8" x="14" y="2" rx="1"/></g></svg></div><div class="num">04</div><div class="tt">Tooling spike</div><div class="tx">Export, transform, load and a sample reconciliation report.</div><div class="own"><span>owner <b>[TBD]</b></span><span>date <b>[TBD]</b></span></div></div>
+      <div class="nrow ow" style="--c:var(--r5)"><div class="ic"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:scale" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 3v18m7-13l3 8a5 5 0 0 1-6 0zV7"/><path d="M3 7h1a17 17 0 0 0 8-2a17 17 0 0 0 8 2h1M5 8l3 8a5 5 0 0 1-6 0zV7m2 14h10"/></g></svg></div><div class="num">05</div><div class="tt">Strategy and runbook</div><div class="tx">Options analysis with the data above, plus a rollback draft.</div><div class="own"><span>owner <b>[TBD]</b></span><span>date <b>[TBD]</b></span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8b PEOPLE -->
+<section class="slide">
+  <div class="kicker">The team</div>
+  <h2>Who is <span class="grn">on it</span></h2>
+  <div class="grow">
+    <div class="people" style="--n:3">
+      <div class="person" style="--c:var(--r1)"><div class="av">TL</div><div><b>[Name]</b><span>Tech lead</span><em>Strategy and runbook</em></div></div>
+      <div class="person" style="--c:var(--r2)"><div class="av">BE</div><div><b>[Name]</b><span>Backend</span><em>Data mapping</em></div></div>
+      <div class="person" style="--c:var(--r3)"><div class="av">DE</div><div><b>[Name]</b><span>Data engineer</span><em>Tooling spike</em></div></div>
+      <div class="person" style="--c:var(--r4)"><div class="av">PM</div><div><b>[Name]</b><span>Product</span><em>Parity matrix</em></div></div>
+      <div class="person" style="--c:var(--r5)"><div class="av">QA</div><div><b>[Name]</b><span>Quality</span><em>Reconciliation</em></div></div>
+      <div class="person" style="--c:var(--warn)"><div class="av">DB</div><div><b>[Name]</b><span>Data owner</span><em>Legacy inventory</em></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 OPEN QUESTIONS · stacked cards, pinned to top -->
+<section class="slide">
+  <div class="kicker">Still open</div>
+  <h2>Open decisions, <span class="grn">with an owner</span></h2>
+  <div class="grow top">
+    <div class="stack c2">
+      <div class="scard" style="--c:var(--accent)"><div class="in"><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:snowflake" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m10 20l-1.25-2.5L6 18m4-14L8.75 6.5L6 6m8 14l1.25-2.5L18 18M14 4l1.25 2.5L18 6"/><path d="m17 21l-3-6h-4m7-12l-3 6l1.5 3M2 12h6.5L10 9m10 1l-1.5 2l1.5 2"/><path d="M22 12h-6.5L14 15M4 10l1.5 2L4 14m3 7l3-6l-1.5-3M7 3l3 6h4"/></g></svg> Legacy freeze</b><span>Frozen, maintenance mode, or still evolving while we migrate?</span></div></div>
+      <div class="scard" style="--c:var(--accent2)"><div class="in"><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:flask-conical" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2M6.453 15h11.094M8.5 2h7"/></svg> Pilot tenant</b><span>Which one goes first, for how long, and how do we roll back?</span></div></div>
+      <div class="scard" style="--c:var(--accent3)"><div class="in"><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:calendar" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M8 2v3m8-3v3"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/></g></svg> Cutover windows</b><span>Who schedules each one: the client, the tenant, or us?</span></div></div>
+      <div class="scard" style="--c:var(--warn)"><div class="in"><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:archive-x" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M9.5 17l5-5m-5 0l5 5"/></g></svg> Legacy end of life</b><span>How long it stays read-only, driven by retention and compliance.</span></div></div>
+      <div class="scard" style="--c:var(--danger)"><div class="in"><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:puzzle" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.39 4.39a1 1 0 0 0 1.68-.474a2.5 2.5 0 1 1 3.014 3.015a1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474a2.5 2.5 0 1 0-3.014 3.015a1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474a2.5 2.5 0 1 1-3.014-3.015a1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474a2.5 2.5 0 1 0 3.014-3.015a1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></svg> Module back-fill</b><span>Which modules each migrated tenant keeps on day one.</span></div></div>
+      <div class="scard" style="--c:var(--r2)"><div class="in"><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:hourglass" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 22h14M5 2h14m-2 20v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg> How much history</b><span>A month is enough to operate, a year to compare. Product decides.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 WORKSTREAM LIFECYCLE · stepper -->
+<section class="slide">
+  <div class="kicker">Definition of done</div>
+  <h2>How a workstream <span class="accent">closes</span></h2>
+  <div class="grow">
+    <div class="steps" style="--n:3">
+      <div class="step vio"><span class="n">01</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:hand" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2m0 4V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2m0 4.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g></svg> Owner confirmed</b><small>today</small></div>
+      <div class="step acc"><span class="n">02</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:search" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m21 21l-4.34-4.34"/><circle cx="11" cy="11" r="8"/></g></svg> Research</b><small>questions, edge cases, risks</small></div>
+      <div class="step acc"><span class="n">03</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:file-pen" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5m-9.622 4.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></g></svg> Findings written as a spec</b></div>
+      <div class="step"><span class="n">04</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:eye" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M2.062 12.348a1 1 0 0 1 0-.696a10.75 10.75 0 0 1 19.876 0a1 1 0 0 1 0 .696a10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></g></svg> Team review</b></div>
+      <div class="step grn"><span class="n">05</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:circle-check" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m16 9l-5.5 5.5L8 12"/></g></svg> Merged</b><small>if it is not merged, it does not exist</small></div>
+      <div class="step dim"><span class="n">06</span><b><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:scale" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 3v18m7-13l3 8a5 5 0 0 1-6 0zV7"/><path d="M3 7h1a17 17 0 0 0 8-2a17 17 0 0 0 8 2h1M5 8l3 8a5 5 0 0 1-6 0zV7m2 14h10"/></g></svg> Feeds the strategy decision</b></div>
+    </div>
+    <div class="legend" style="margin-top:26px">
+      <span><span class="sw" style="background:var(--accent3)"></span> ownership</span>
+      <span><span class="sw" style="background:var(--accent)"></span> the actual work</span>
+      <span><span class="sw" style="background:var(--accent2)"></span> done</span>
+    </div>
+  </div>
+</section>
+
+<!-- 10b CHECKLIST -->
+<section class="slide">
+  <div class="kicker">Readiness</div>
+  <h2>Before we <span class="accent">leave the room</span></h2>
+  <div class="grow">
+    <div class="checklist">
+      <div class="chk done"><div class="box"></div><div><b>Workstreams defined</b><span>five tracks, one deliverable each</span></div><div class="st">done</div></div>
+      <div class="chk doing"><div class="box"></div><div><b>Owners confirmed</b><span>three of five so far</span></div><div class="st">in progress</div></div>
+      <div class="chk blocked"><div class="box"></div><div><b>Read access to the legacy database</b><span>waiting on client credentials</span></div><div class="st">blocked</div></div>
+      <div class="chk"><div class="box"></div><div><b>Weekly sync scheduled</b><span>day and time to agree</span></div><div class="st">to do</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 NEXT STEPS · banners -->
+<section class="slide">
+  <div class="kicker">What happens tomorrow</div>
+  <h2>Next steps</h2>
+  <div class="grow">
+    <div class="banners" style="--n:4">
+      <div class="banner" style="--c:var(--accent2)"><div class="tab">01<small>TODAY</small></div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:hand" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2m0 4V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2m0 4.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g></svg></div><h4>Owners confirmed</h4><p>One per workstream, before leaving this room.</p></div></div>
+      <div class="banner" style="--c:var(--r2)"><div class="tab">02</div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:file-pen" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5m-9.622 4.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></g></svg></div><h4>Research specs opened</h4><p>Each owner opens theirs. Date [TBD].</p></div></div>
+      <div class="banner" style="--c:var(--accent)"><div class="tab">03</div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:repeat" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m17 2l4 4l-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4l4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></g></svg></div><h4>Weekly sync</h4><p>Day and time [TBD].</p></div></div>
+      <div class="banner" style="--c:var(--accent3)"><div class="tab">04</div><div class="fold"></div>
+        <div class="body"><div class="bi"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:scale" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 3v18m7-13l3 8a5 5 0 0 1-6 0zV7"/><path d="M3 7h1a17 17 0 0 0 8-2a17 17 0 0 0 8 2h1M5 8l3 8a5 5 0 0 1-6 0zV7m2 14h10"/></g></svg></div><h4>Strategy decision</h4><p>When inventory, parity and mapping close.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11b QUOTE -->
+<section class="slide">
+  <div class="glow g2"></div>
+  <div class="kicker">Keep in mind</div>
+  <div class="grow">
+    <div class="quote">
+      <blockquote>A migration is not a copy. It is <em>a translation</em> between two models of the same business.</blockquote>
+      <div class="by">— The principle behind every workstream</div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 CLOSING -->
+<section class="slide">
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="grow" style="align-items:center;text-align:center">
+    <div class="titlemark"><svg xmlns="http://www.w3.org/2000/svg" class="icon" data-icon="lucide:package" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73zm1 .27V12"/><path d="M3.29 7L12 12l8.71-5M7.5 4.27l9 5.15"/></g></svg> EXAMPLE DECK</div>
+    <h1 style="margin-top:18px">Measure first,<br><span class="accent">then move</span></h1>
+    <p class="sub" style="margin-left:auto;margin-right:auto">The right strategy comes out of the data, and today we start collecting it.</p>
+  </div>
+</section>
+
+</div>
+
+<div class="bar" id="progress" style="width:0"></div>
+<div class="chrome">
+  <div class="brandmini"><b>Light-it</b> · Example deck</div>
+  <div class="dotrow" id="dots"></div>
+  <div id="counter" class="mono">01 / 01</div>
+</div>
+<div class="hint">← → / Space to navigate · F fullscreen</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dots=document.getElementById('dots');
+  const counter=document.getElementById('counter');
+  const progress=document.getElementById('progress');
+  let i=0;
+  slides.forEach((_,n)=>{const d=document.createElement('div');d.className='dot'+(n===0?' on':'');dots.appendChild(d)});
+  const dotEls=[...dots.children];
+  function pad(n){return String(n).padStart(2,'0')}
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    dotEls.forEach((d,k)=>d.classList.toggle('on',k===i));
+    counter.textContent=pad(i+1)+' / '+pad(slides.length);
+    progress.style.width=((i)/(slides.length-1)*100)+'%';
+    const a=slides[i];a.style.animation='none';void a.offsetWidth;a.style.animation='';
+    const url=new URL(location.href);url.searchParams.set('page',i+1);
+    try{history.replaceState(null,'',url)}catch(_){history.replaceState(null,'','#'+(i+1))}
+  }
+  const startPage=parseInt(new URLSearchParams(location.search).get('page')??location.hash.slice(1),10);
+  show(Number.isFinite(startPage)?startPage-1:0);
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();show(i+1)}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(i-1)}
+    else if(e.key==='Home'){show(0)}
+    else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key.toLowerCase()==='f'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen()}
+  });
+  document.getElementById('deck').addEventListener('click',e=>{
+    if(e.target.closest('a'))return;
+    show(e.clientX > window.innerWidth/2 ? i+1 : i-1);
+  });
+</script>
+</body>
+</html>
