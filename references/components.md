@@ -36,6 +36,16 @@ browser (or screenshot it with `?page=N`) to see every component rendered.
 | Tasks with a status | Checklist `.checklist` | 6 |
 | Team, owners, stakeholders | People `.people` | 6 |
 | Opening a part of the deck | Section divider `.divider` | 1 |
+| Outline of the deck | Agenda `.agenda` | 8 |
+| Choosing between alternatives, with a recommendation | Options `.options` | 4 |
+| Work over periods (months, sprints) | Gantt `.gantt` | 7 rows |
+| One number that carries the slide | Hero stat `.hero` | 1 |
+| A warning, a caveat, a blocker | Callout `.callout` | 4 |
+| Text beside an image or diagram | Split `.split` | 2 columns |
+| Screenshot or diagram with caption | Figure `.figure` | 1 |
+| Source code | Code `.code` | 14 lines |
+| Definitions | Terms `.terms` | 8 |
+| Capabilities across alternatives | Feature matrix `table.dt.matrix` | 6 rows |
 | Peer items with icons | Card grid `.cols .card` | 4 per row |
 | Headline numbers | Stat row `.statrow` | 3 |
 | Layered architecture | Layer stack `.layerstack` | 4 |
@@ -288,6 +298,141 @@ or `h2` above.
 ```
 
 ---
+
+## Agenda
+
+Numbered outline for the second slide. `.now` highlights the current part, `.done` fades
+the ones already covered (useful when the agenda slide is repeated between parts).
+
+```html
+<ul class="agenda">
+  <li class="done">Where we are<small>One line on the part.</small></li>
+  <li class="now">The decision<small>One line on the part.</small></li>
+  <li>Next steps</li>
+</ul>
+```
+
+## Options
+
+Decision between alternatives. `.pick` marks the recommendation (with a `.badge`), `.dim`
+fades a rejected one. `.verdict` is the one-line reason. `--n` sets columns (2–4).
+
+```html
+<div class="options" style="--n:3">
+  <div class="option dim"><div class="ol">Option A</div><h4>Name</h4><ul><li>Trait</li><li>Trait</li></ul><div class="verdict">Rejected: why.</div></div>
+  <div class="option pick"><div class="badge">Recommended</div><div class="ol">Option B</div><h4>Name</h4><ul><li>Trait</li></ul><div class="verdict">Why this one.</div></div>
+  <div class="option"><div class="ol">Option C</div><h4>Name</h4><ul><li>Trait</li></ul><div class="verdict">Kept as fallback.</div></div>
+</div>
+```
+
+## Gantt
+
+Bars over a column grid. `--cols` on the container is the number of periods; each bar sets
+`--from` and `--to` as grid lines (1-based, `--to` exclusive). `.gbar.ghost` is tentative,
+`.today` a vertical marker at column `--at`.
+
+```html
+<div class="gantt" style="--cols:6">
+  <div class="gh"><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span></div>
+  <div class="gl">Research<small>detail</small></div><div class="gr"><div class="gbar" style="--from:1;--to:3;--c:var(--r1)">specs</div><div class="today" style="--at:2"></div></div>
+  <div class="gl">Cutover</div><div class="gr"><div class="gbar ghost" style="--from:6;--to:7;--c:var(--r5)">tentative</div></div>
+</div>
+```
+
+## Hero stat
+
+One number that carries the slide, with a delta pill and context. `.delta.up` / `.down`
+also work inside a `.stat` card.
+
+```html
+<div class="hero">
+  <div class="big">28%</div>
+  <div><span class="delta up"><i data-icon="lucide:trending-up"></i> +12 pts</span><h3>What the number is</h3><p>Why it matters, in two sentences.</p></div>
+</div>
+```
+
+## Callout
+
+An alert with a tone: `.info`, `.ok`, `.warn`, `.danger`. Stack several with `.callouts`.
+
+```html
+<div class="callout warn"><i data-icon="lucide:triangle-alert"></i><div><b>Watch out</b><span>The thing to keep in mind.</span></div></div>
+```
+
+## Split
+
+Two columns, text beside a visual. `.wide-r` / `.wide-l` give the visual 3/5 of the width.
+
+```html
+<div class="split wide-r">
+  <div><h3>Point</h3><p>Two or three sentences.</p><ul class="bul g"><li><b>Lead</b> <span>detail</span></li></ul></div>
+  <figure class="figure browser">…</figure>
+</div>
+```
+
+## Figure
+
+A framed image or diagram with a caption. `.browser` adds a window bar for screenshots.
+Images must be inlined (`data:` URI or inline `<svg>`): the deck never references files.
+`.ph` is a striped placeholder until the real image exists.
+
+```html
+<figure class="figure browser">
+  <img src="data:image/png;base64,…" alt="What the screenshot shows">
+  <figcaption>Caption in one line</figcaption>
+</figure>
+```
+
+## Code
+
+A code block with a file tab. No highlighter ships with the deck: wrap tokens by hand with
+`.k` keyword, `.f` function, `.s` string, `.n` number, `.c` comment, and `.mark` on a line
+to highlight it. Keep it under ~14 lines; a slide is not an editor.
+
+```html
+<div class="code">
+  <div class="file"><i data-icon="lucide:file-code"></i> path/to/file.ts</div>
+<pre><span class="k">const</span> total = <span class="f">sum</span>(rows);
+<span class="mark"><span class="k">if</span> (total === <span class="n">0</span>) <span class="k">throw new</span> <span class="f">Empty</span>();</span></pre>
+</div>
+```
+
+`<pre>` keeps whitespace: start it at column 0 in the HTML.
+
+## Terms
+
+Glossary in two columns.
+
+```html
+<dl class="terms">
+  <div><dt>Term</dt><dd>Definition in one sentence.</dd></div>
+  <div><dt>Term</dt><dd>Definition in one sentence.</dd></div>
+</dl>
+```
+
+## Feature matrix
+
+`table.dt.matrix` centers every column after the first. Cells take `.yes`, `.no`, `.part`
+and hold a mark (✓ ✕ ~) or a short word.
+
+```html
+<table class="dt matrix">
+  <tr><th>Capability</th><th>A</th><th>B</th></tr>
+  <tr><td><b>Rollback per tenant</b></td><td class="no">✕</td><td class="yes">✓</td></tr>
+  <tr><td><b>Build effort</b></td><td class="yes">Low</td><td class="part">Medium</td></tr>
+</table>
+```
+
+## Speaker notes
+
+Any slide may end with `<aside class="notes">…</aside>`. Hidden by default; the presenter
+presses `N` to toggle an overlay on the active slide. Notes never print. Write them when the
+deck will be presented by someone other than its author.
+
+## Print to PDF
+
+`⌘P` / `Ctrl+P` prints one slide per 16:9 page with the chrome hidden; the viewer must enable
+background graphics in the print dialog. No extra markup needed.
 
 ## Title slide
 

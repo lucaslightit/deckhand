@@ -27,8 +27,8 @@ If the subject is part of the current codebase, search it first (the project's s
 code search if it has one, otherwise ripgrep), then read the specific files you need.
 
 If the scope is unclear (audience, length, depth), ask one focused question. Otherwise
-default to a **10–15 slide** deck: title → problem/context → overview → detail slides →
-takeaways.
+default to a **10–15 slide** deck: title → agenda → problem/context → overview → detail
+slides → takeaways. Decks over ~12 slides get section dividers.
 
 ### Step 2 — Copy the template
 
@@ -70,7 +70,8 @@ Do **not** touch the `<style>` (except appending a theme block), the bottom `<sc
 The counter (`01 / NN`), dots, and progress bar are generated automatically from the
 number of `.slide` sections — you never hand-number them. The script keeps the current
 slide in the querystring (`deck.html?page=7`, falling back to `#7` where the browser blocks
-it), so a reload or a shared link lands on the same slide.
+it), so a reload or a shared link lands on the same slide. `N` toggles speaker notes
+(`<aside class="notes">` inside a slide); `⌘P` prints one slide per 16:9 page.
 
 ### Step 4 — Verify and deliver
 
@@ -120,6 +121,16 @@ Every slide is:
 | Checklist | `.checklist` | Tasks with a status |
 | People | `.people` | Team, owners, stakeholders |
 | Section divider | `.divider` | Opening a part of the deck |
+| Agenda | `.agenda` | Outline on the second slide |
+| Options | `.options` | Alternatives with a recommendation |
+| Gantt | `.gantt` | Work over months or sprints |
+| Hero stat | `.hero` | One number that carries the slide |
+| Callout | `.callout` | Info, ok, warning, blocker |
+| Split | `.split` | Text beside an image or diagram |
+| Figure | `.figure` | Screenshot or diagram with caption |
+| Code | `.code` | Source code with a file tab |
+| Terms | `.terms` | Glossary |
+| Feature matrix | `table.dt.matrix` | Capabilities across alternatives |
 | Card grid | `.cols .card` | Peer items with icons |
 | Stat row | `.statrow` | Headline numbers |
 | Layer stack | `.layerstack` | Layered architecture |
@@ -145,8 +156,9 @@ between the markers in `assets/template.html`. Then use it in the deck.
   rows, banners, stacked cards, process, timelines, versus, quadrants, meters, grids, tables.
 - **Keep card body text tight** (1–3 sentences). The font sizes assume brevity; long
   paragraphs overflow on a 16:9 screen.
-- **End on a takeaways slide** (a `c2` grid of colored cards) and add `<div class="glow g2"></div>`
+- **End on a takeaways slide** (stacked cards or a `c2` grid) and add `<div class="glow g2"></div>`
   for a closing flourish.
+- **Speaker notes** on any slide the author will not present themselves.
 - **Icons, not emoji.** Markers are Iconify icons (Lucide by default) so the deck reads as
   one visual system. Emoji only as a fallback when no icon fits.
 - Match the source deck's restraint: dark, calm, monospace accents, generous spacing. No

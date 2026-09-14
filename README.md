@@ -8,15 +8,17 @@ build step, no dependencies, one file you open in a browser and present offline.
 
 ## What you get
 
-- **A component library.** Numbered rows, ribbon banners, stacked cards, chevron process,
-  stepper, bridge diagram, timeline, versus, quote, quadrant, meters, checklist, people,
-  section dividers, card grids, stat rows, flows and tables. Every component reads the
+- **A component library.** Agenda, numbered rows, ribbon banners, stacked cards, checklist,
+  terms, options, versus, quadrant, feature matrix, chevron process, stepper, timeline,
+  gantt, stat rows, hero stat, meters, bridge diagram, flows, split, figure, code, callouts,
+  quote, people and section dividers. Every component reads the
   theme tokens, so a theme swap restyles the whole deck.
 - **A template that is also the showcase.** Open `assets/template.html` and page through one
   slide per component.
 - **Icons, not emoji.** Any [Iconify](https://iconify.design) set (Lucide by default),
   inlined as SVG while authoring, so a deck never loads anything at runtime.
 - **Shareable slides.** The current slide lives in the URL (`deck.html?page=7`).
+- **Presenter tools.** `N` toggles speaker notes; `⌘P` prints one slide per page for a PDF.
 - **A full example.** `assets/example.html` is a 21-slide project kickoff that uses every
   component, in the Light-it theme.
 
