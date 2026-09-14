@@ -272,6 +272,8 @@ Items with a status. `.done` (strikes through), `.doing`, `.blocked`, or no clas
 
 Avatar with initials, name, role and a responsibility tag. `--n` sets columns (default 3).
 Use role placeholders unless the user gave you real names.
+Photos: put an `<img>` inside `.av` instead of the initials, as a small `data:` JPEG (~160px);
+the colored ring stays.
 
 ```html
 <div class="people" style="--n:3">
